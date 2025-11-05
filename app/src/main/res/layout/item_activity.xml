@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@android:color/white"
+    android:layout_margin="8dp"
+    android:elevation="2dp">
+
+    <!-- Foto dell'attività -->
+    <ImageView
+        android:id="@+id/activityPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_photo_placeholder"
+        android:contentDescription="Activity photo"
+        android:visibility="gone"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Testo della nota -->
+    <TextView
+        android:id="@+id/activityNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"
+        android:textStyle="normal"
+        android:padding="4dp"
+        android:text="Note placeholder" />
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/activityItemText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:textSize="16sp" />
+
+
+</LinearLayout>
