@@ -39,17 +39,21 @@ class LocationTrackingService : Service() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // Inizializza il repository
         val database = AppDatabase.getDatabase(this)
-        repository = TripRepository(database.tripDao(), database.activityDao(), database.journeyLocationDao())
+        repository = TripRepository(
+            database.tripDao(),
+            database.activityDao(),
+            database.journeyLocationDao()
+        )
 
         createNotificationChannel()
 
+        // Callback: ogni nuova posizione ricevuta
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult.lastLocation?.let { location ->
                     if (currentTripId != -1) {
-                        Log.d("LocationService", "Location received: ${location.latitude}, ${location.longitude}")
+                        Log.d("LocationService", "Nuova posizione: ${location.latitude}, ${location.longitude}")
 
                         val journeyLocation = JourneyLocation(
                             tripId = currentTripId,
@@ -58,73 +62,92 @@ class LocationTrackingService : Service() {
                             timestamp = System.currentTimeMillis()
                         )
 
-                        // Salva nel database in background
                         CoroutineScope(Dispatchers.IO).launch {
                             repository.insertJourneyLocation(journeyLocation)
+                            Log.d("LocationService", "Posizione salvata nel DB")
                         }
                     }
                 }
             }
         }
     }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // 1️⃣ Crea e mostra la notifica SUBITO
         val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Travel Companion")
-            .setContentText("Inizializzazione del tracciamento...")
+            .setContentText("Preparazione tracciamento...")
             .setSmallIcon(R.drawable.ic_location)
             .build()
+
         startForeground(NOTIFICATION_ID, notification)
 
-        // 2️⃣ Poi analizza l’intent
         when (intent?.action) {
             ACTION_START_TRACKING -> {
                 currentTripId = intent.getIntExtra(EXTRA_TRIP_ID, -1)
                 if (currentTripId == -1) {
-                    Log.e("LocationService", "Invalid Trip ID, stopping service.")
+                    Log.e("LocationService", "Trip ID non valido. Arresto del servizio.")
                     stopSelf()
                 } else {
-                    Log.d("LocationService", "Starting tracking for trip ID: $currentTripId")
+                    Log.d("LocationService", "Avvio tracciamento per trip ID: $currentTripId")
                     startLocationUpdates()
                 }
             }
             ACTION_STOP_TRACKING -> {
-                Log.d("LocationService", "Stopping tracking")
+                Log.d("LocationService", "Stop tracciamento richiesto")
                 stopLocationUpdates()
                 stopSelf()
             }
         }
+
         return START_NOT_STICKY
     }
-
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Travel Companion")
             .setContentText("Registrazione del viaggio in corso...")
-            .setSmallIcon(R.drawable.ic_location) // Assicurati di avere 'ic_location' in res/drawable
+            .setSmallIcon(R.drawable.ic_location)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)
 
-        val locationRequest = LocationRequest.create().apply {
-            interval = 10000 // 10 secondi
-            fastestInterval = 5000 // 5 secondi
-            priority = Priority.PRIORITY_HIGH_ACCURACY
-        }
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10_000)
+            .setMinUpdateIntervalMillis(5_000)
+            .build()
 
-        // Controlla di nuovo i permessi (anche se dovrebbero essere già stati concessi)
         if (ActivityCompat.checkSelfPermission(
                 this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("LocationService", "Location permission not granted. Stopping service.")
+            Log.e("LocationService", "Permessi mancanti. Stop del servizio.")
             stopSelf()
             return
         }
 
+        // ✅ PRIMA POSIZIONE IMMEDIATA
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null && currentTripId != -1) {
+                val journeyLocation = JourneyLocation(
+                    tripId = currentTripId,
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    timestamp = System.currentTimeMillis()
+                )
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    repository.insertJourneyLocation(journeyLocation)
+                    Log.d("LocationService", "📍 Prima posizione salvata: ${location.latitude}, ${location.longitude}")
+                }
+            } else {
+                Log.w("LocationService", "Prima posizione non disponibile — attendo fix GPS.")
+            }
+        }.addOnFailureListener {
+            Log.e("LocationService", "Errore nel recupero della prima posizione: ${it.message}")
+        }
+
+        // Aggiornamenti continui
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
             locationCallback,
@@ -135,6 +158,7 @@ class LocationTrackingService : Service() {
     private fun stopLocationUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
         stopForeground(true)
+        Log.d("LocationService", "Tracciamento interrotto e foreground fermato.")
     }
 
     private fun createNotificationChannel() {
@@ -147,9 +171,7 @@ class LocationTrackingService : Service() {
         manager.createNotificationChannel(channel)
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
+    override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
         stopLocationUpdates()

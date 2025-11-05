@@ -22,8 +22,7 @@
         android:id="@+id/startJourneyButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start Journey" />
-
+        android:text="Start Journey"/>
     <Button
         android:id="@+id/stopJourneyButton"
         android:layout_width="match_parent"
@@ -63,6 +62,12 @@
             android:layout_height="wrap_content"
             android:text="+ Note" />
     </LinearLayout>
+    <fragment
+        android:id="@+id/tripMap"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_marginTop="16dp" />
 
     <!-- Lista delle attività -->
     <androidx.recyclerview.widget.RecyclerView
