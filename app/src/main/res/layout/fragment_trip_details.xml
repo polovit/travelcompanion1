@@ -1,86 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    tools:context=".ui.TripDetailsFragment">
+    android:fillViewport="true"
+    android:padding="16dp">
 
-    <!-- Titolo del viaggio -->
-    <TextView
-        android:id="@+id/tripTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Trip Destination"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:paddingBottom="8dp" />
-
-    <Button
-        android:id="@+id/startJourneyButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Start Journey"/>
-    <Button
-        android:id="@+id/stopJourneyButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Stop Journey"
-        android:visibility="gone" />
-
-
-    <!-- Date del viaggio -->
-    <TextView
-        android:id="@+id/tripDates"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Start - End"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:textColor="#666"
-        android:paddingBottom="16dp" />
-
-    <!-- Pulsanti per aggiungere attività -->
     <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
+        android:gravity="center_horizontal">
+
+        <!-- MAPPA -->
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/mapView"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- SEZIONE TRACKING -->
+        <Button
+            android:id="@+id/startJourneyButton"
+            android:text="Inizia viaggio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
 
         <Button
-            android:id="@+id/addPhotoButton"
-            android:layout_width="wrap_content"
+            android:id="@+id/stopJourneyButton"
+            android:text="Termina viaggio"
+            android:visibility="gone"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="+ Photo"
-            android:layout_marginEnd="16dp" />
+            android:layout_marginBottom="16dp" />
 
-        <Button
-            android:id="@+id/addNoteButton"
-            android:layout_width="wrap_content"
+        <!-- SEZIONE NOTE E FOTO -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="+ Note" />
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/addNoteButton"
+                android:text="Aggiungi Nota"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/addPhotoButton"
+                android:text="Aggiungi Foto"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- LISTA NOTE -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/activitiesRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp"/>
     </LinearLayout>
-    <fragment
-        android:id="@+id/tripMap"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:layout_marginTop="16dp" />
-
-    <!-- Lista delle attività -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/activitiesRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingTop="16dp" />
-    <com.google.android.gms.maps.MapView
-        android:id="@+id/tripMapView"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_marginTop="16dp"/>
-
-
-</LinearLayout>
+</ScrollView>

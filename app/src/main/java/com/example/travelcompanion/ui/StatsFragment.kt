@@ -45,32 +45,56 @@ class StatsFragment : Fragment(), OnMapReadyCallback {
         loadStats()
         return view
     }
-
     private fun loadStats() {
         val db = AppDatabase.getDatabase(requireContext())
         val dao = db.journeyLocationDao()
 
-        lifecycleScope.launch {
+        lifecycleScope.launch { // Parte sul Main
             val now = LocalDate.now()
             val startOfMonth = now.withDayOfMonth(1)
                 .atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
             val endOfMonth = now.plusMonths(1).withDayOfMonth(1)
                 .atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
 
-            val locations = withContext(Dispatchers.IO) {
-                dao.getAllBetween(startOfMonth, endOfMonth)
+            // Passa al thread background (IO) per TUTTO il lavoro pesante
+            val (totalKm, cityCount, pathPoints) = withContext(Dispatchers.IO) {
+                val locations = dao.getAllBetween(startOfMonth, endOfMonth)
+
+                if (locations.isEmpty()) {
+                    // Se non c'è niente, restituisci valori vuoti
+                    Triple(0.0, 0, emptyList<LatLng>())
+                } else {
+                    // Esegui i calcoli pesanti QUI, sul thread background
+                    val km = calculateTotalKm(locations)
+                    val cities = countCitiesVisited(locations)
+                    val points = locations.map { LatLng(it.latitude, it.longitude) }
+
+                    // Restituisci i risultati
+                    Triple(km, cities, points)
+                }
             }
 
-            val totalKm = calculateTotalKm(locations)
-            val cityCount = countCitiesVisited(locations)
-
+            // Ora sei di nuovo sul Main thread, ma hai solo risultati pronti
+            // Aggiornare la UI è velocissimo
             totalKmText.text = "Totale km: %.2f".format(totalKm)
             citiesVisitedText.text = "Città visitate: $cityCount"
 
-            drawPathOnMap(locations)
+            // Aggiorna la mappa (sul Main thread)
+            if (pathPoints.isNotEmpty()) {
+                map?.apply {
+                    addPolyline(
+                        PolylineOptions()
+                            .addAll(pathPoints)
+                            .width(8f)
+                    )
+                    moveCamera(CameraUpdateFactory.newLatLngZoom(pathPoints.last(), 6f))
+                }
+            }
         }
     }
 
+    // Le tue funzioni calculateTotalKm, haversine, e countCitiesVisited
+// non devono essere modificate.
     private fun calculateTotalKm(locations: List<JourneyLocation>): Double {
         var total = 0.0
         for (i in 0 until locations.size - 1) {
