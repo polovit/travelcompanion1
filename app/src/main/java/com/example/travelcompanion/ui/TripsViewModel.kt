@@ -43,4 +43,8 @@ class TripsViewModel(application: Application) : AndroidViewModel(application) {
     fun addActivity(activity: TripActivity) = viewModelScope.launch {
         repository.insertActivity(activity)
     }
+    // Espone il LiveData per le posizioni di un viaggio
+    fun getLocationsForTrip(tripId: Int): LiveData<List<com.example.travelcompanion.model.data.entities.JourneyLocation>> {
+        return repository.getLocationsForTrip(tripId).asLiveData()
+    }
 }

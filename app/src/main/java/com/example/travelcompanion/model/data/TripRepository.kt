@@ -63,4 +63,9 @@ class TripRepository(
     fun getLocationsForPeriod(startTime: Long, endTime: Long): Flow<List<JourneyLocation>> {
         return journeyLocationDao.getLocationsForPeriodFlow(startTime, endTime) // Assicurati che il DAO abbia questo metodo Flow
     }
+
+    // Funzione per prendere le coordinate in real-time
+    fun getLocationsForTrip(tripId: Int): Flow<List<JourneyLocation>> {
+        return journeyLocationDao.getLocationsForTrip(tripId)
+    }
 }

@@ -17,9 +17,8 @@ interface JourneyLocationDao {
     // Metodo per StatsFragment - Usa Flow
     @Query("SELECT * FROM journey_location WHERE timestamp BETWEEN :start AND :end ORDER BY timestamp ASC")
     fun getLocationsForPeriodFlow(start: Long, end: Long): Flow<List<JourneyLocation>>
-
     @Query("SELECT * FROM journey_location WHERE tripId = :tripId ORDER BY timestamp ASC")
-    suspend fun getLocationsForTrip(tripId: Int): List<JourneyLocation>
+    fun getLocationsForTrip(tripId: Int): Flow<List<JourneyLocation>>
     // Metodi aggiuntivi che avevi, assicurati siano corretti
     @Query("SELECT COUNT(DISTINCT tripId) FROM journey_location")
     suspend fun getDistinctCitiesCount(): Int
