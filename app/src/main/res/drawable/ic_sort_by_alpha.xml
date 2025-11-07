@@ -1,4 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-
-</selector>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M6,17h2.5l-3.5,-3.5L1.5,17H4v5H6V17zM6.5,5c0,0.83 0.67,1.5 1.5,1.5S9.5,5.83 9.5,5 8.83,3.5 8,3.5 6.5,4.17 6.5,5zM4.5,14c0,0.83 0.67,1.5 1.5,1.5S7.5,14.83 7.5,14s-0.67,-1.5 -1.5,-1.5S4.5,13.17 4.5,14zM1.5,8c0,0.83 0.67,1.5 1.5,1.5S4.5,8.83 4.5,8 3.83,6.5 3,6.5 1.5,7.17 1.5,8zM9.5,11c0,0.83 0.67,1.5 1.5,1.5s1.5,-0.67 1.5,-1.5S11.83,9.5 11,9.5s-1.5,0.67 -1.5,1.5zM11,17.5c0.83,0 1.5,-0.67 1.5,-1.5S11.83,14.5 11,14.5s-1.5,0.67 -1.5,1.5S10.17,17.5 11,17.5zM8,11.5c-0.83,0 -1.5,-0.67 -1.5,-1.5S7.17,8.5 8,8.5s1.5,0.67 1.5,1.5S8.83,11.5 8,11.5zM22.5,10H16v2h6.5V10zM19.5,14H16v2h3.5V14zM16,18h6.5v2H16V18zM22.5,6H16v2h6.5V6z"/>
+</vector>
