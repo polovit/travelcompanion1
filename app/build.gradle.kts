@@ -49,7 +49,8 @@ dependencies {
 
     implementation(composeBom)
     androidTestImplementation(composeBom)
-
+// WorkManager per i job periodici
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
     // Librerie Compose base
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")

@@ -19,6 +19,13 @@ interface TripDao {
 
     @Update
     suspend fun updateTrip(trip: Trip) // Aggiunto/Verificato
+    // ...
+
+    // Funzione per il Worker: prende l'ultimo viaggio (non serve Flow)
+    @Query("SELECT * FROM trips ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestTrip(): Trip?
+
+
 
     @Delete
     suspend fun deleteTrip(trip: Trip) // Nome corretto
