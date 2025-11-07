@@ -19,10 +19,12 @@ interface JourneyLocationDao {
     fun getLocationsForPeriodFlow(start: Long, end: Long): Flow<List<JourneyLocation>>
 
     @Query("SELECT * FROM journey_location WHERE tripId = :tripId ORDER BY timestamp ASC")
-    fun getLocationsForTrip(tripId: Int): List<JourneyLocation>
+    suspend fun getLocationsForTrip(tripId: Int): List<JourneyLocation>
     // Metodi aggiuntivi che avevi, assicurati siano corretti
     @Query("SELECT COUNT(DISTINCT tripId) FROM journey_location")
     suspend fun getDistinctCitiesCount(): Int
+
+
 
     @Query("SELECT * FROM journey_location WHERE timestamp BETWEEN :start AND :end ORDER BY timestamp ASC")
     suspend fun getAllBetween(start: Long, end: Long): List<JourneyLocation> // Questo è suspend, ok

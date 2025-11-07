@@ -17,11 +17,15 @@ import com.example.travelcompanion.model.Trip
 import java.text.DateFormat
 import java.util.Date
 import android.app.DatePickerDialog
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import com.google.android.material.textfield.TextInputEditText
 import java.util.Calendar
 import java.text.SimpleDateFormat
 import java.util.Locale
+import android.view.MenuInflater
+
 
 
 class TripsFragment : Fragment() {
@@ -34,8 +38,12 @@ class TripsFragment : Fragment() {
     private var _binding: FragmentTripsBinding? = null
     private val binding get() = _binding!!
     // --- FINE VIEW BINDING ---
+    private var trips: List<Trip> = emptyList()
 
-
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -72,6 +80,8 @@ class TripsFragment : Fragment() {
 
         return view
     }
+
+
 
     // --- VIEW BINDING ---
     override fun onDestroyView() {
@@ -178,17 +188,41 @@ class TripsFragment : Fragment() {
             .setNegativeButton("Cancel", null)
             .show()
     }
-
-    // Aggiungi questo metodo se non c'è già, per creare l'adapter corretto
-    private fun createTripAdapter(): TripAdapter {
-        return TripAdapter(
-            onTripClick = { trip ->
-                val action = TripsFragmentDirections.actionNavTripsToTripDetailsFragment(trip.id)
-                findNavController().navigate(action)
-            },
-            onTripDelete = { trip ->
-                showDeleteConfirmationDialog(trip)
-            }
-        )
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_trip_sort, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+        // Mostra le icone anche nel menu overflow
+        if (menu is androidx.appcompat.view.menu.MenuBuilder) {
+            menu.setOptionalIconsVisible(true)
+        }
     }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.sort_by_name -> {
+                sortTripsByName()
+                true
+            }
+            R.id.sort_by_date -> {
+                sortTripsByDate()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    private fun sortTripsByName() {
+        // ordina alfabeticamente per destinazione
+        val sortedList = trips.sortedBy { it.destination.lowercase() }
+        adapter.updateList(sortedList)
+        Toast.makeText(requireContext(), "Ordinati per destinazione", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun sortTripsByDate() {
+        // ordina per data di inizio (più recenti per primi)
+        val sortedList = trips.sortedByDescending { it.startDate }
+        adapter.updateList(sortedList)
+        Toast.makeText(requireContext(), "Ordinati per data", Toast.LENGTH_SHORT).show()
+    }
+
+
 }

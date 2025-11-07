@@ -5,6 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- TOOLBAR PRIMA -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        android:titleTextColor="@color/black"
+        android:title="Your Trips" />
+
+    <!-- FRAGMENT CONTAINER -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -14,6 +24,7 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
+    <!-- NAVIGAZIONE IN BASSO -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
@@ -23,4 +34,5 @@
         app:itemIconTint="@android:color/darker_gray"
         app:itemTextColor="@android:color/darker_gray"
         app:labelVisibilityMode="labeled" />
+
 </LinearLayout>

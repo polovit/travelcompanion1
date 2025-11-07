@@ -16,6 +16,12 @@
         android:textSize="22sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        android:title="Your Trips" />
 
     <!-- RecyclerView dei viaggi -->
     <androidx.recyclerview.widget.RecyclerView
@@ -35,5 +41,6 @@
         android:layout_margin="16dp"
         android:src="@drawable/ic_add"
         android:contentDescription="Add Trip" />
+
 
 </LinearLayout>
