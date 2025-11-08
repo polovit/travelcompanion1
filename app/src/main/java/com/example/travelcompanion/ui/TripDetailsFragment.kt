@@ -14,6 +14,7 @@ import com.example.travelcompanion.ui.adapters.TripActivityAdapter
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -31,12 +32,22 @@ import com.example.travelcompanion.LocationTrackingService
 import com.example.travelcompanion.R
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.Marker
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
+import android.net.Uri
+import android.util.Log
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 // Nota: non abbiamo più bisogno di lifecycleScope, Dispatchers, o AppDatabase qui
 
 class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
 
-    // --- Elementi UI ---
+    //  Elementi UI
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
     private lateinit var addNoteButton: Button
@@ -44,18 +55,21 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
     private lateinit var recyclerView: RecyclerView
     private lateinit var mapView: MapView
 
-    // --- Logica Mappa ---
+    //  Logica Mappa
     private var googleMap: GoogleMap? = null
     private var currentPolyline: Polyline? = null
     private val currentMarkers: MutableList<Marker> = mutableListOf()
 
-    // --- Adapter e ViewModel ---
+    //  Adapter e ViewModel
     private lateinit var activityAdapter: TripActivityAdapter
     private val tripsViewModel: TripsViewModel by viewModels()
 
-    // --- Logica Posizione ---
+    //  Logica Posizione
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentTripId: Int = -1
+    // per foto
+    private var latestTmpUri: Uri? = null // Salva l'URI temporaneo della foto
+    private lateinit var takePictureLauncher: androidx.activity.result.ActivityResultLauncher<Uri>
 
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -71,7 +85,19 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
 
         currentTripId = arguments?.getInt("tripId", -1) ?: -1
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
-
+// Inizializza il launcher per la fotocamera
+        takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess ->
+            if (isSuccess) {
+                latestTmpUri?.let { uri ->
+                    Log.d("TripDetailsFragment", "Foto scattata: $uri")
+                    // La foto è stata salvata con successo
+                    // Ora salvala nel database come TripActivity
+                    saveActivityWithPhoto(uri)
+                }
+            } else {
+                Log.e("TripDetailsFragment", "Scatto foto fallito o annullato")
+            }
+        }
         // --- Setup RecyclerView e Adapter ---
         setupRecyclerView()
 
@@ -134,6 +160,7 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         }
 
         addPhotoButton.setOnClickListener {
+            takeImage()
             Toast.makeText(requireContext(), "Funzione foto in sviluppo", Toast.LENGTH_SHORT).show()
         }
     }
@@ -326,6 +353,62 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
             }
         }
     }
+    // --- BLOCCO INTERO DA AGGIUNGERE ALLA FINE DEL FILE ---
+
+    /**
+     * Avvia l'intent della fotocamera.
+     * Prima crea un URI sicuro dove salvare l'immagine.
+     */
+    private fun takeImage() {
+        lifecycleScope.launch {
+            // Crea un URI temporaneo
+            val tmpUri = createImageUri(requireContext())
+            latestTmpUri = tmpUri // Salva l'URI per il callback
+
+            // Avvia il launcher della fotocamera
+            takePictureLauncher.launch(tmpUri)
+        }
+    }
+
+    /**
+     * Crea un file temporaneo nella cartella privata dell'app
+     * e restituisce un URI sicuro gestito dal FileProvider.
+     */
+    private fun createImageUri(context: Context): Uri {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val imageFile = File(context.getExternalFilesDir("Pictures"), "JPEG_${timestamp}.jpg")
+
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider", // Deve corrispondere all'authorities nel Manifest
+            imageFile
+        )
+    }
+
+    /**
+     * Salva l'attività nel database (simile a showNoteDialog)
+     * ma questa volta con il percorso della foto.
+     */
+    @SuppressLint("MissingPermission")
+    private fun saveActivityWithPhoto(photoUri: Uri) {
+        if (!checkLocationPermissions()) return
+        if (currentTripId == -1) return
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            val newActivity = TripActivity(
+                tripId = currentTripId,
+                timestamp = System.currentTimeMillis(),
+                latitude = location?.latitude,
+                longitude = location?.longitude,
+                note = "Foto", // Puoi chiedere una nota anche qui, o lasciare "Foto"
+                photoPath = photoUri.toString() // Salva l'URI della foto
+            )
+
+            tripsViewModel.addActivity(newActivity)
+            Toast.makeText(requireContext(), "Foto salvata!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     // --- Gestione ciclo di vita MapView ---
     override fun onResume() {
