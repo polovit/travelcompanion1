@@ -13,7 +13,6 @@
         android:padding="16dp"
         android:gravity="center_horizontal">
 
-        <!-- Titolo -->
         <TextView
             android:id="@+id/statsTitle"
             android:layout_width="wrap_content"
@@ -24,7 +23,6 @@
             android:textStyle="bold"
             android:layout_marginBottom="16dp" />
 
-        <!-- Card statistiche -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -64,7 +62,6 @@
                 android:textColor="@android:color/black" />
         </LinearLayout>
 
-        <!-- Mappa -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -81,7 +78,20 @@
             android:layout_height="300dp"
             android:layout_marginBottom="32dp" />
 
-        <!-- Pulsante aggiorna -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Distanza percorsa (ultimi 6 mesi)"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp" />
+
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/distanceBarChart"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_marginBottom="24dp" />
         <Button
             android:id="@+id/refreshStatsButton"
             android:layout_width="wrap_content"
