@@ -1,6 +1,10 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
-
+    <item
+        android:id="@+id/filter_by_type"
+        android:title="Filtra per tipo"
+        android:icon="@drawable/ic_filter"
+        app:showAsAction="always" />
     <item
         android:id="@+id/sort_by_name"
         android:title="Ordina per nome"

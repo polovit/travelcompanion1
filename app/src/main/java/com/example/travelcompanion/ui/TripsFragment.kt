@@ -199,6 +199,11 @@ class TripsFragment : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            // --- BLOCCO DA AGGIUNGERE ---
+            R.id.filter_by_type -> {
+                showFilterDialog()
+                true
+            }
             R.id.sort_by_name -> {
                 sortTripsByName()
                 true
@@ -210,6 +215,30 @@ class TripsFragment : Fragment() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+    private fun showFilterDialog() {
+        // Definisce i tipi di viaggio come richiesto dalle specifiche
+        val tripTypes = arrayOf("Tutti", "Local trip", "Day trip", "Multi-day trip")
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Filtra per tipo")
+            .setItems(tripTypes) { dialog, which ->
+                // 'which' è l'indice dell'elemento cliccato
+                when (which) {
+                    0 -> { // "Tutti"
+                        tripsViewModel.setFilter(null)
+                        Toast.makeText(requireContext(), "Mostro tutti i viaggi", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> { // "Local trip", "Day trip", "Multi-day trip"
+                        val selectedType = tripTypes[which]
+                        tripsViewModel.setFilter(selectedType)
+                        Toast.makeText(requireContext(), "Filtro: $selectedType", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Annulla", null)
+            .show()
+    }
+
     private fun sortTripsByName() {
         // ordina alfabeticamente per destinazione
         val sortedList = trips.sortedBy { it.destination.lowercase() }
