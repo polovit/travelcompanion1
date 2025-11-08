@@ -36,13 +36,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import android.net.Uri
 import android.util.Log
+import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
 // Nota: non abbiamo più bisogno di lifecycleScope, Dispatchers, o AppDatabase qui
 
 class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
@@ -54,7 +59,7 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
     private lateinit var addPhotoButton: Button
     private lateinit var recyclerView: RecyclerView
     private lateinit var mapView: MapView
-
+    private lateinit var totalDistanceText: TextView
     //  Logica Mappa
     private var googleMap: GoogleMap? = null
     private var currentPolyline: Polyline? = null
@@ -85,6 +90,8 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
 
         currentTripId = arguments?.getInt("tripId", -1) ?: -1
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
+        totalDistanceText = view.findViewById(R.id.textTotalDistance)
+        totalDistanceText.visibility = View.GONE // Nascondi di default
 // Inizializza il launcher per la fotocamera
         takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess ->
             if (isSuccess) {
@@ -126,7 +133,6 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = activityAdapter
     }
-
     private fun setupObservers() {
         if (currentTripId != -1) {
             // 1. Osserva le attività (NOTE/PIN)
@@ -138,7 +144,26 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
             // 2. Osserva le POSIZIONI (PERCORSO)
             tripsViewModel.getLocationsForTrip(currentTripId).observe(viewLifecycleOwner) { points ->
                 drawTripPolyline(points) // Disegna solo la linea
+
+                // --- CORREZIONE ---
+                // Queste righe devono stare QUI DENTRO
+                val totalKm = calculateTotalKm(points)
+                totalDistanceText.text = "Distanza totale: %.2f km".format(totalKm)
+                // --- FINE CORREZIONE ---
             }
+
+            // --- BLOCCO AGGIUNTO ---
+            // 3. Osserva i DETTAGLI DEL VIAGGIO (per il tipo)
+            tripsViewModel.getTripById(currentTripId).observe(viewLifecycleOwner) { trip ->
+                if (trip != null && trip.type == "Multi-day trip") {
+                    // Mostra il testo della distanza SOLO per i viaggi multi-day
+                    totalDistanceText.visibility = View.VISIBLE
+                } else {
+                    // Nascondilo per tutti gli altri tipi
+                    totalDistanceText.visibility = View.GONE
+                }
+            }
+            // --- FINE BLOCCO ---
         }
     }
 
@@ -430,4 +455,38 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         super.onLowMemory()
         mapView.onLowMemory()
     }
-}
+
+
+        // --- BLOCCO DA AGGIUNGERE ALLA FINE DEL FILE ---
+
+        /**
+         * Calcola la distanza totale (in Km) da una lista di coordinate.
+         * Preso da StatsFragment.
+         */
+        private fun calculateTotalKm(locations: List<com.example.travelcompanion.model.data.entities.JourneyLocation>): Double {
+            var total = 0.0
+            for (i in 0 until locations.size - 1) {
+                val a = locations[i]
+                val b = locations[i + 1]
+                total += haversine(a.latitude, a.longitude, b.latitude, b.longitude)
+            }
+            return total
+        }
+
+        /**
+         * Calcola la distanza tra due punti (formula Haversine).
+         * Preso da StatsFragment.
+         */
+        private fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+            val R = 6371.0 // Raggio della Terra in Km
+            val dLat = Math.toRadians(lat2 - lat1)
+            val dLon = Math.toRadians(lon2 - lon1)
+            val a = sin(dLat / 2).pow(2.0) +
+                    cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+                    sin(dLon / 2).pow(2.0)
+            return 2 * R * atan2(sqrt(a), sqrt(1 - a))
+        }
+        // --- FINE BLOCCO ---
+
+    } // <-- Fine della classe TripDetailsFragment
+
