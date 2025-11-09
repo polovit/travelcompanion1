@@ -2,7 +2,7 @@ package com.example.travelcompanion.model.data.dao
 
 import androidx.room.*
 import com.example.travelcompanion.model.TripActivity
-import kotlinx.coroutines.flow.Flow // Importa Flow
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ActivityDao {

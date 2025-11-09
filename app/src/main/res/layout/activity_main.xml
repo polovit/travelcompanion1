@@ -12,7 +12,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorSurface"
         android:titleTextColor="@color/black"
-        android:title="Your Trips" />
+        android:title="Travel Companion" />
 
     <!-- FRAGMENT CONTAINER -->
     <androidx.fragment.app.FragmentContainerView

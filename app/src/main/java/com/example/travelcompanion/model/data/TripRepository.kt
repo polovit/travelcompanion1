@@ -6,7 +6,7 @@ import com.example.travelcompanion.model.data.dao.ActivityDao
 import com.example.travelcompanion.model.data.dao.JourneyLocationDao
 import com.example.travelcompanion.model.data.dao.TripDao
 import com.example.travelcompanion.model.data.entities.JourneyLocation
-import kotlinx.coroutines.flow.Flow // Usa Flow invece di LiveData qui
+import kotlinx.coroutines.flow.Flow
 
 class TripRepository(
     private val tripDao: TripDao,
@@ -22,17 +22,15 @@ class TripRepository(
         return tripDao.getTripByIdFlow(tripId)
     }
 
-    // Assicurati che il DAO abbia un metodo insertTrip
+
     suspend fun insertTrip(trip: Trip) {
         tripDao.insertTrip(trip)
     }
 
-    // Assicurati che il DAO abbia un metodo deleteTrip
     suspend fun deleteTrip(trip: Trip) {
         tripDao.deleteTrip(trip)
     }
 
-    // Assicurati che il DAO abbia un metodo updateTrip (se necessario)
     suspend fun updateTrip(trip: Trip) {
         tripDao.updateTrip(trip)
     }
@@ -43,12 +41,10 @@ class TripRepository(
         return activityDao.getActivitiesForTripFlow(tripId)
     }
 
-    // Assicurati che il DAO abbia insertActivity
     suspend fun insertActivity(activity: TripActivity) {
         activityDao.insertActivity(activity)
     }
 
-    // Assicurati che il DAO abbia deleteActivity (se necessario)
     suspend fun deleteActivity(activity: TripActivity) {
         activityDao.deleteActivity(activity)
     }

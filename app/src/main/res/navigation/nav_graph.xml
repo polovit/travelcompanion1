@@ -5,7 +5,6 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/nav_trips">
 
-    <!-- Schermata principale dei viaggi -->
     <fragment
         android:id="@+id/nav_trips"
         android:name="com.example.travelcompanion.ui.TripsFragment"
@@ -16,7 +15,6 @@
             app:destination="@id/nav_trip_details" />
     </fragment>
 
-    <!-- Dettagli di un viaggio -->
     <fragment
         android:id="@+id/nav_trip_details"
         android:name="com.example.travelcompanion.ui.TripDetailsFragment"
@@ -27,47 +25,12 @@
             android:name="tripId"
             app:argType="integer" />
 
-        <action
-            android:id="@+id/action_nav_trip_details_to_photoFragment"
-            app:destination="@id/photoFragment" />
-
-        <action
-            android:id="@+id/action_nav_trip_details_to_noteFragment"
-            app:destination="@id/noteFragment" />
     </fragment>
 
-    <!-- Aggiungi Foto -->
-    <fragment
-        android:id="@+id/photoFragment"
-        android:name="com.example.travelcompanion.ui.PhotoFragment"
-        android:label="Add Photo"
-        tools:layout="@layout/fragment_photo" />
-
-    <!-- Aggiungi Nota -->
-    <fragment
-        android:id="@+id/noteFragment"
-        android:name="com.example.travelcompanion.ui.NoteFragment"
-        android:label="Add Note"
-        tools:layout="@layout/fragment_note" />
-
-    <!-- Mappa -->
-    <fragment
-        android:id="@+id/nav_map"
-        android:name="com.example.travelcompanion.ui.MapFragment"
-        android:label="Map"
-        tools:layout="@layout/fragment_map" />
-
-    <!-- Impostazioni -->
-    <fragment
-        android:id="@+id/nav_settings"
-        android:name="com.example.travelcompanion.ui.SettingsFragment"
-        android:label="Settings"
-        tools:layout="@layout/fragment_settings" />
     <fragment
         android:id="@+id/nav_stats"
         android:name="com.example.travelcompanion.ui.StatsFragment"
         android:label="Statistiche"
         tools:layout="@layout/fragment_stats" />
-
 
 </navigation>

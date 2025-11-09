@@ -1,6 +1,7 @@
 package com.example.travelcompanion.ui
 
 import android.os.Bundle
+import com.google.android.gms.maps.model.TileOverlayOptions
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,7 +21,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.PolylineOptions
+import com.google.maps.android.heatmaps.HeatmapTileProvider
+import com.google.maps.android.heatmaps.WeightedLatLng
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -34,10 +38,8 @@ class StatsFragment : Fragment(), OnMapReadyCallback {
     private lateinit var totalKmText: TextView
     private lateinit var citiesVisitedText: TextView
     private var map: GoogleMap? = null
-
-    // --- VARIABILE AGGIUNTA ---
     private lateinit var barChart: BarChart
-    // --- FINE VARIABILE ---
+    private var currentMonthPoints: List<LatLng>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,19 +49,13 @@ class StatsFragment : Fragment(), OnMapReadyCallback {
         val view = inflater.inflate(R.layout.fragment_stats, container, false)
         totalKmText = view.findViewById(R.id.totalKmText)
         citiesVisitedText = view.findViewById(R.id.citiesVisitedText)
-
-        // --- RIGA AGGIUNTA ---
-        barChart = view.findViewById(R.id.distanceBarChart) // Collega il grafico
-        // --- FINE RIGA ---
+        barChart = view.findViewById(R.id.distanceBarChart)
 
         val mapFragment = childFragmentManager.findFragmentById(R.id.statsMapFragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         loadStats()
-
-        // --- RIGA AGGIUNTA ---
-        loadBarChartData() // Avvia il caricamento del grafico
-        // --- FINE RIGA ---
+        loadBarChartData()
 
         return view
     }
@@ -68,52 +64,79 @@ class StatsFragment : Fragment(), OnMapReadyCallback {
         val db = AppDatabase.getDatabase(requireContext())
         val dao = db.journeyLocationDao()
 
-        lifecycleScope.launch { // Parte sul Main
+        lifecycleScope.launch {
             val now = LocalDate.now()
             val startOfMonth = now.withDayOfMonth(1)
                 .atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
             val endOfMonth = now.plusMonths(1).withDayOfMonth(1)
                 .atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
 
-            // Passa al thread background (IO) per TUTTO il lavoro pesante
+
             val (totalKm, cityCount, pathPoints) = withContext(Dispatchers.IO) {
                 val locations = dao.getAllBetween(startOfMonth, endOfMonth)
 
                 if (locations.isEmpty()) {
-                    // Se non c'è niente, restituisci valori vuoti
                     Triple(0.0, 0, emptyList<LatLng>())
                 } else {
-                    // Esegui i calcoli pesanti QUI, sul thread background
                     val km = calculateTotalKm(locations)
                     val cities = countCitiesVisited(locations)
                     val points = locations.map { LatLng(it.latitude, it.longitude) }
-
-                    // Restituisci i risultati
                     Triple(km, cities, points)
                 }
             }
 
-            // Ora sei di nuovo sul Main thread, ma hai solo risultati pronti
-            // Aggiornare la UI è velocissimo
+            // Aggiorna UI
             totalKmText.text = "Totale km: %.2f".format(totalKm)
             citiesVisitedText.text = "Città visitate: $cityCount"
 
-            // Aggiorna la mappa (sul Main thread)
-            if (pathPoints.isNotEmpty()) {
-                map?.apply {
-                    addPolyline(
-                        PolylineOptions()
-                            .addAll(pathPoints)
-                            .width(8f)
-                    )
-                    moveCamera(CameraUpdateFactory.newLatLngZoom(pathPoints.last(), 6f))
-                }
+            // Salva i punti. La mappa li disegnerà quando è pronta in onMapReady
+            currentMonthPoints = pathPoints
+
+            // Se la mappa è GIÀ pronta, disegna la heatmap ora
+            if (map != null && pathPoints.isNotEmpty()) {
+                addHeatMap(pathPoints)
             }
+
         }
     }
 
-    // Le tue funzioni calculateTotalKm, haversine, e countCitiesVisited
-    // non devono essere modificate.
+    override fun onMapReady(googleMap: GoogleMap) {
+        map = googleMap
+        // Quando la mappa è pronta, controlla se abbiamo già i dati
+        // per disegnare la heatmap
+        currentMonthPoints?.let { points ->
+            if (points.isNotEmpty()) {
+                addHeatMap(points)
+            }
+        }
+
+    }
+
+    private fun addHeatMap(points: List<LatLng>) {
+        if (points.isEmpty()) return
+
+        map?.clear() // Pulisce eventuali vecchie polyline
+        // Converte LatLng in WeightedLatLng
+        val weightedPoints = points.map { WeightedLatLng(it, 1.0) }
+
+        // Crea il provider
+        val provider = HeatmapTileProvider.Builder()
+            .weightedData(weightedPoints)
+            .radius(50) // Raggio (in pixel) di influenza di ogni punto
+            .build()
+
+        //  Crea le Opzioni e inserisci il provider
+        val tileOverlayOptions = TileOverlayOptions()
+            .tileProvider(provider)
+
+        //Aggiungi le OPZIONI alla mappa, non il provider
+        map?.addTileOverlay(tileOverlayOptions)
+
+        // Centra la mappa sull'ultimo punto
+        map?.moveCamera(CameraUpdateFactory.newLatLngZoom(points.last(), 10f))
+    }
+
+
     private fun calculateTotalKm(locations: List<JourneyLocation>): Double {
         var total = 0.0
         for (i in 0 until locations.size - 1) {
@@ -135,7 +158,6 @@ class StatsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun countCitiesVisited(locations: List<JourneyLocation>): Int {
-        // semplice placeholder: considera una “città” ogni ~50km di distanza
         if (locations.isEmpty()) return 0
         var count = 1
         var last = locations.first()
@@ -152,27 +174,12 @@ class StatsFragment : Fragment(), OnMapReadyCallback {
         map?.let { googleMap ->
             if (locations.isEmpty()) return
             val points = locations.map { LatLng(it.latitude, it.longitude) }
-            googleMap.addPolyline(
-                PolylineOptions()
-                    .addAll(points)
-                    .width(8f)
-            )
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(points.last(), 6f))
+            // Questa funzione non dovrebbe più essere chiamata,
+            // ma la lasciamo per sicurezza (verrà sovrascritta da addHeatMap)
         }
     }
 
-    override fun onMapReady(googleMap: GoogleMap) {
-        map = googleMap
-    }
-
-    // --- BLOCCO INTERO DA AGGIUNGERE ALLA FINE DEL FILE ---
-
-    /**
-     * Carica i dati per il grafico a barre.
-     * Calcola la distanza percorsa per ognuno degli ultimi 6 mesi.
-     */
     private fun loadBarChartData() {
-        // Evita crash se il context non è disponibile
         if (!isAdded) return
 
         val db = AppDatabase.getDatabase(requireContext())
@@ -180,13 +187,14 @@ class StatsFragment : Fragment(), OnMapReadyCallback {
 
         lifecycleScope.launch(Dispatchers.IO) {
             val entries = ArrayList<BarEntry>()
-            val labels = ArrayList<String>()
+            val labels = ArrayList<String>() // Lista per le etichette (es. "Ago", "Set")
             val now = YearMonth.now()
 
             // Calcola i dati per gli ultimi 6 mesi
             for (i in 5 downTo 0) {
                 val currentMonth = now.minusMonths(i.toLong())
-                val monthLabel = currentMonth.month.name.substring(0, 3) // Es. "NOV"
+                // Es. "NOV"
+                val monthLabel = currentMonth.month.name.substring(0, 3)
                 labels.add(monthLabel)
 
                 // Calcola inizio e fine del mese in millisecondi
@@ -195,50 +203,57 @@ class StatsFragment : Fragment(), OnMapReadyCallback {
                 val endOfMonth = currentMonth.plusMonths(1).atDay(1)
                     .atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
 
-                // Prendi le location per quel mese
                 val locations = dao.getAllBetween(startOfMonth, endOfMonth)
-                // Calcola i km (riutilizzando la tua funzione!)
                 val totalKmThisMonth = calculateTotalKm(locations)
 
-                // Aggiungi l'entrata al grafico (usiamo 5-i per avere l'ordine 0,1,2,3,4,5)
+                // L'indice (5-i) deve corrispondere all'indice dell'etichetta
                 entries.add(BarEntry((5 - i).toFloat(), totalKmThisMonth.toFloat()))
             }
 
             // Dati pronti, ora aggiorna la UI sul Main thread
             withContext(Dispatchers.Main) {
-                // Assicurati che il fragment sia ancora "attaccato"
                 if (isAdded) {
-                    setupBarChart(entries)
+                    // Ora passiamo anche le etichette alla funzione di setup
+                    setupBarChart(entries, labels)
                 }
             }
         }
     }
 
-    /**
-     * Configura e popola il BarChart con i dati calcolati.
-     */
-    private fun setupBarChart(entries: ArrayList<BarEntry>) {
+    private fun setupBarChart(entries: ArrayList<BarEntry>, labels: ArrayList<String>) {
         val dataSet = BarDataSet(entries, "Km percorsi")
-        // Usa un colore dai tuoi XML
         dataSet.color = ContextCompat.getColor(requireContext(), R.color.purple_500)
-        dataSet.setDrawValues(false) // Non mostrare i valori numerici sopra le barre
+
+        // Mostra i valori numerici (i Km) sopra ogni barra
+        dataSet.setDrawValues(true)
+        dataSet.valueTextColor = ContextCompat.getColor(requireContext(), R.color.black)
+        dataSet.valueTextSize = 10f
+        // --- FINE MODIFICHE ---
 
         val barData = BarData(dataSet)
         barData.barWidth = 0.5f
 
         barChart.data = barData
-        barChart.description.isEnabled = false // Nasconde la descrizione
-        barChart.legend.isEnabled = false // Nasconde la legenda
-        barChart.setFitBars(true) // Adatta le barre
-        barChart.animateY(1000) // Animazione
+        barChart.description.isEnabled = false
+        barChart.legend.isEnabled = false
+        barChart.setFitBars(true)
+        barChart.animateY(1000)
 
-        // Stile assi
-        barChart.xAxis.isEnabled = false // Nasconde etichette asse X
-        barChart.axisLeft.isEnabled = false // Nasconde asse Y sinistro
-        barChart.axisRight.isEnabled = false // Nasconde asse Y destro
-        barChart.setDrawGridBackground(false) // Niente griglia
+        // Configura l'asse X (i mesi)
+        val xAxis = barChart.xAxis
+        xAxis.isEnabled = true // Abilita l'asse X
+        xAxis.position = XAxis.XAxisPosition.BOTTOM // Metti le etichette in basso
+        xAxis.valueFormatter = IndexAxisValueFormatter(labels) // Usa i nomi dei mesi
+        xAxis.setDrawGridLines(false) // Nasconde la griglia verticale
+        xAxis.granularity = 1f // Mostra ogni etichetta
+
+        // Configura l'asse Y (i Km)
+        barChart.axisLeft.isEnabled = true // Abilita l'asse Y sinistro
+        barChart.axisLeft.axisMinimum = 0f // Parti da 0 Km
+        barChart.axisRight.isEnabled = false // Nascondi l'asse Y destro
+
+        barChart.setDrawGridBackground(false)
 
         barChart.invalidate() // Ridisegna il grafico
     }
-    // --- FINE BLOCCO DA AGGIUNGERE ---
 }

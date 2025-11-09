@@ -13,7 +13,7 @@ import com.squareup.picasso.Picasso
 
 class TripActivityAdapter(
     private var activities: List<TripActivity> = emptyList(),
-    private val onItemClick: (TripActivity) -> Unit // Lambda per il click
+    private val onItemClick: (TripActivity) -> Unit
 
 ) : RecyclerView.Adapter<TripActivityAdapter.ActivityViewHolder>() {
 
@@ -22,7 +22,6 @@ class TripActivityAdapter(
         val noteText: TextView = itemView.findViewById(R.id.activityNote)
         val photo: ImageView = itemView.findViewById(R.id.activityPhoto)
 
-        // --- BLOCCO DA AGGIUNGERE ---
         fun bind(activity: TripActivity) {
             noteText.text = activity.note ?: ""
 
@@ -38,7 +37,6 @@ class TripActivityAdapter(
                 onItemClick(activity)
             }
         }
-        // --- FINE BLOCCO DA AGGIUNGERE ---
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActivityViewHolder {

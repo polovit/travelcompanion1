@@ -10,6 +10,6 @@ data class Trip(
     val startDate: String?=null ,
     val endDate: String?=null ,
     val type: String? = null,
-    val isOngoing: Boolean = false // 🔹 indica se il viaggio è “attivo”
+    val isOngoing: Boolean = false //  indica se il viaggio è “attivo”
 
 )

@@ -1,5 +1,6 @@
 package com.example.travelcompanion.ui
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -30,14 +31,14 @@ import android.view.MenuInflater
 
 class TripsFragment : Fragment() {
 
-    // USARE L'ALTRO VIEWMODEL SE NECESSARIO, MA TRIPSVIEWMODEL HA GIÀ TUTTO
+
     private val tripsViewModel: TripsViewModel by viewModels()
     private lateinit var adapter: TripAdapter // Definizione dell'adapter
 
-    // --- VIEW BINDING per FragmentTrips ---
+
     private var _binding: FragmentTripsBinding? = null
     private val binding get() = _binding!!
-    // --- FINE VIEW BINDING ---
+
     private var trips: List<Trip> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,10 +52,8 @@ class TripsFragment : Fragment() {
         _binding = FragmentTripsBinding.inflate(inflater, container, false)
         val view = binding.root
 
-        // --- Configurazione Adapter ---
         adapter = TripAdapter(
             onTripClick = { trip ->
-                // QUI è sicuro usare findNavController()
                 val action = TripsFragmentDirections.actionNavTripsToTripDetailsFragment(trip.id)
                 findNavController().navigate(action)
             },
@@ -62,7 +61,6 @@ class TripsFragment : Fragment() {
                 showDeleteConfirmationDialog(trip)
             }
         )
-        // --- Fine Configurazione Adapter ---
 
         binding.recyclerViewTrips.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerViewTrips.adapter = adapter
@@ -83,12 +81,10 @@ class TripsFragment : Fragment() {
 
 
 
-    // --- VIEW BINDING ---
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null // Pulisci il riferimento al binding
     }
-    // --- FINE VIEW BINDING ---
 
     private fun showAddTripDialog() {
         val dialogBinding = DialogAddTripBinding.inflate(LayoutInflater.from(requireContext()))
@@ -188,10 +184,10 @@ class TripsFragment : Fragment() {
             .setNegativeButton("Cancel", null)
             .show()
     }
+    @SuppressLint("RestrictedApi")
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_trip_sort, menu)
         super.onCreateOptionsMenu(menu, inflater)
-        // Mostra le icone anche nel menu overflow
         if (menu is androidx.appcompat.view.menu.MenuBuilder) {
             menu.setOptionalIconsVisible(true)
         }
@@ -199,19 +195,12 @@ class TripsFragment : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            // --- BLOCCO DA AGGIUNGERE ---
             R.id.filter_by_type -> {
                 showFilterDialog()
                 true
             }
-            R.id.sort_by_name -> {
-                sortTripsByName()
-                true
-            }
-            R.id.sort_by_date -> {
-                sortTripsByDate()
-                true
-            }
+
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -239,19 +228,7 @@ class TripsFragment : Fragment() {
             .show()
     }
 
-    private fun sortTripsByName() {
-        // ordina alfabeticamente per destinazione
-        val sortedList = trips.sortedBy { it.destination.lowercase() }
-        adapter.updateList(sortedList)
-        Toast.makeText(requireContext(), "Ordinati per destinazione", Toast.LENGTH_SHORT).show()
-    }
 
-    private fun sortTripsByDate() {
-        // ordina per data di inizio (più recenti per primi)
-        val sortedList = trips.sortedByDescending { it.startDate }
-        adapter.updateList(sortedList)
-        Toast.makeText(requireContext(), "Ordinati per data", Toast.LENGTH_SHORT).show()
-    }
 
 
 }

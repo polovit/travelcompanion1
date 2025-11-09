@@ -3,7 +3,7 @@ package com.example.travelcompanion.ui
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.travelcompanion.databinding.ItemTripBinding // <-- Assicurati che l'import sia corretto
+import com.example.travelcompanion.databinding.ItemTripBinding
 import com.example.travelcompanion.model.Trip
 
 // Costruttore corretto: accetta solo le funzioni di callback
@@ -25,12 +25,11 @@ class TripAdapter(
 
             // Imposta il click listener per l'intera riga
             binding.root.setOnClickListener {
-                // Chiama la funzione lambda passata dal Fragment
+
                 onTripClick(trip)
             }
 
-            // Imposta il click listener per il bottone di eliminazione
-            // Assicurati che l'ID 'deleteButton' esista in item_trip.xml
+
             binding.deleteButton.setOnClickListener {
                 // Chiama la funzione lambda passata dal Fragment
                 onTripDelete(trip)
@@ -56,7 +55,6 @@ class TripAdapter(
     // Metodo pubblico per aggiornare la lista di viaggi mostrata dall'adapter
     fun updateList(newTrips: List<Trip>) {
         trips = newTrips
-        notifyDataSetChanged() // Notifica al RecyclerView che i dati sono cambiati
-        // Nota: Per liste molto grandi, considera l'uso di DiffUtil per performance migliori
+        notifyDataSetChanged()
     }
 }

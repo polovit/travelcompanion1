@@ -48,7 +48,6 @@ import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
-// Nota: non abbiamo più bisogno di lifecycleScope, Dispatchers, o AppDatabase qui
 
 class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
 
@@ -80,7 +79,7 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // --- Binding elementi UI ---
+
         startButton = view.findViewById(R.id.startJourneyButton)
         stopButton = view.findViewById(R.id.stopJourneyButton)
         addNoteButton = view.findViewById(R.id.addNoteButton)
@@ -91,7 +90,7 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         currentTripId = arguments?.getInt("tripId", -1) ?: -1
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         totalDistanceText = view.findViewById(R.id.textTotalDistance)
-        totalDistanceText.visibility = View.GONE // Nascondi di default
+        totalDistanceText.visibility = View.GONE
 // Inizializza il launcher per la fotocamera
         takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess ->
             if (isSuccess) {
@@ -135,35 +134,32 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
     }
     private fun setupObservers() {
         if (currentTripId != -1) {
-            // 1. Osserva le attività (NOTE/PIN)
+            // Osserva le attività
             tripsViewModel.getActivitiesForTrip(currentTripId).observe(viewLifecycleOwner) { activities ->
                 activityAdapter.setActivities(activities)
                 drawActivityMarkers(activities) // Disegna solo i pin
             }
 
-            // 2. Osserva le POSIZIONI (PERCORSO)
+            //posizioni
             tripsViewModel.getLocationsForTrip(currentTripId).observe(viewLifecycleOwner) { points ->
                 drawTripPolyline(points) // Disegna solo la linea
 
-                // --- CORREZIONE ---
-                // Queste righe devono stare QUI DENTRO
+
+
                 val totalKm = calculateTotalKm(points)
                 totalDistanceText.text = "Distanza totale: %.2f km".format(totalKm)
-                // --- FINE CORREZIONE ---
+
             }
 
-            // --- BLOCCO AGGIUNTO ---
-            // 3. Osserva i DETTAGLI DEL VIAGGIO (per il tipo)
+            // DETTAGLI DEL VIAGGIO
             tripsViewModel.getTripById(currentTripId).observe(viewLifecycleOwner) { trip ->
                 if (trip != null && trip.type == "Multi-day trip") {
                     // Mostra il testo della distanza SOLO per i viaggi multi-day
                     totalDistanceText.visibility = View.VISIBLE
                 } else {
-                    // Nascondilo per tutti gli altri tipi
                     totalDistanceText.visibility = View.GONE
                 }
             }
-            // --- FINE BLOCCO ---
         }
     }
 
@@ -186,7 +182,6 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
 
         addPhotoButton.setOnClickListener {
             takeImage()
-            Toast.makeText(requireContext(), "Funzione foto in sviluppo", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -196,11 +191,8 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
             googleMap = map
             googleMap?.uiSettings?.isZoomControlsEnabled = true
 
-            // Non disegniamo nulla qui, gli osservatori lo faranno
-            // appena i dati arrivano dal database.
 
             if (currentTripId == -1) {
-                // Mostra solo Bologna come fallback
                 val bologna = LatLng(44.4949, 11.3426)
                 googleMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(bologna, 13f))
             }
@@ -248,7 +240,6 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         }
     }
 
-    // ---- Gestione permessi ----
     private fun checkLocationPermissions(): Boolean {
         val fine = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
         val coarse = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -278,7 +269,6 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         }
     }
 
-    // ---- Avvio tracciamento (PULITO) ----
     private fun startTracking() {
         if (currentTripId == -1) {
             Toast.makeText(requireContext(), "Errore: ID viaggio non valido", Toast.LENGTH_SHORT).show()
@@ -297,7 +287,6 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         // Non disegniamo più nulla da qui
     }
 
-    // ---- Arresto tracciamento (PULITO) ----
     private fun stopTracking() {
         val intent = Intent(requireContext(), LocationTrackingService::class.java).apply {
             action = LocationTrackingService.ACTION_STOP_TRACKING
@@ -311,12 +300,8 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         // Non disegniamo più nulla da qui
     }
 
-    // ---- Funzioni di Disegno Specializzate ----
 
-    /**
-     * Disegna SOLO i pin delle attività (note/foto).
-     * Pulisce solo i pin vecchi, non tocca la linea.
-     */
+
     private fun drawActivityMarkers(activities: List<TripActivity>) {
         googleMap?.let { map ->
             // Pulisce i vecchi marker
@@ -341,10 +326,7 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         }
     }
 
-    /**
-     * Disegna SOLO la linea del percorso.
-     * Pulisce solo la linea vecchia, non tocca i pin.
-     */
+
     private fun drawTripPolyline(points: List<com.example.travelcompanion.model.data.entities.JourneyLocation>) {
         googleMap?.let { map ->
             // Pulisce la vecchia polyline
@@ -378,12 +360,9 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
             }
         }
     }
-    // --- BLOCCO INTERO DA AGGIUNGERE ALLA FINE DEL FILE ---
 
-    /**
-     * Avvia l'intent della fotocamera.
-     * Prima crea un URI sicuro dove salvare l'immagine.
-     */
+
+
     private fun takeImage() {
         lifecycleScope.launch {
             // Crea un URI temporaneo
@@ -395,10 +374,7 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         }
     }
 
-    /**
-     * Crea un file temporaneo nella cartella privata dell'app
-     * e restituisce un URI sicuro gestito dal FileProvider.
-     */
+
     private fun createImageUri(context: Context): Uri {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val imageFile = File(context.getExternalFilesDir("Pictures"), "JPEG_${timestamp}.jpg")
@@ -410,10 +386,7 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
         )
     }
 
-    /**
-     * Salva l'attività nel database (simile a showNoteDialog)
-     * ma questa volta con il percorso della foto.
-     */
+
     @SuppressLint("MissingPermission")
     private fun saveActivityWithPhoto(photoUri: Uri) {
         if (!checkLocationPermissions()) return
@@ -435,7 +408,7 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
     }
 
 
-    // --- Gestione ciclo di vita MapView ---
+
     override fun onResume() {
         super.onResume()
         mapView.onResume()
@@ -457,12 +430,7 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
     }
 
 
-        // --- BLOCCO DA AGGIUNGERE ALLA FINE DEL FILE ---
 
-        /**
-         * Calcola la distanza totale (in Km) da una lista di coordinate.
-         * Preso da StatsFragment.
-         */
         private fun calculateTotalKm(locations: List<com.example.travelcompanion.model.data.entities.JourneyLocation>): Double {
             var total = 0.0
             for (i in 0 until locations.size - 1) {
@@ -473,10 +441,7 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
             return total
         }
 
-        /**
-         * Calcola la distanza tra due punti (formula Haversine).
-         * Preso da StatsFragment.
-         */
+
         private fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
             val R = 6371.0 // Raggio della Terra in Km
             val dLat = Math.toRadians(lat2 - lat1)
@@ -486,7 +451,6 @@ class TripDetailsFragment : Fragment(R.layout.fragment_trip_details) {
                     sin(dLon / 2).pow(2.0)
             return 2 * R * atan2(sqrt(a), sqrt(1 - a))
         }
-        // --- FINE BLOCCO ---
 
-    } // <-- Fine della classe TripDetailsFragment
+    }
 

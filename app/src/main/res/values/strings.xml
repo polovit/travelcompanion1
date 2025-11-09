@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">TravelCompanion</string>
-    <string name="title_trips">Your Trips</string>
+    <string name="title_trips">Travel Companion</string>
 <string name="trip_title">Trip Title</string>
 <string name="trip_type">Trip Type</string>
 <string name="add_activity">Add activity</string>

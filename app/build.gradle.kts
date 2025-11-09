@@ -73,7 +73,7 @@ dependencies {
     //maps
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
-
+    implementation("com.google.maps.android:maps-utils-ktx:3.4.0")
     // Libreria Material XML (per i temi XML tipo themes.xml)
     implementation("com.google.android.material:material:1.12.0")
     // Jetpack Navigation per Compose o XML

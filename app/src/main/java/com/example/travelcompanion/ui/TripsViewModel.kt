@@ -14,11 +14,11 @@ class TripsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: TripRepository
 
-    // --- BLOCCO MODIFICATO ---
-    // 1. Definiamo uno "stato" per il filtro. null = "Tutti"
+
+    //  Definiamo uno "stato" per il filtro. null = "Tutti"
     private val filterState = MutableStateFlow<String?>(null)
 
-    // 2. allTrips ora combina il flusso dal repository CON il flusso del filtro
+    //  allTrips ora combina il flusso dal repository CON il flusso del filtro
     val allTrips: LiveData<List<Trip>>
 
     init {
@@ -37,14 +37,10 @@ class TripsViewModel(application: Application) : AndroidViewModel(application) {
         }.asLiveData() // Converti il risultato in LiveData
     }
 
-    /**
-     * Funzione chiamata dal Fragment per impostare il filtro corrente.
-     * @param type Il tipo di viaggio da filtrare (es. "Local trip") o null per "Tutti".
-     */
+
     fun setFilter(type: String?) {
         filterState.value = type
     }
-    // --- FINE BLOCCO MODIFICATO ---
 
     fun insertTrip(trip: Trip) = viewModelScope.launch {
         repository.insertTrip(trip)

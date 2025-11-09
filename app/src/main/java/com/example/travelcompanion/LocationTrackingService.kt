@@ -126,7 +126,7 @@ class LocationTrackingService : Service() {
             return
         }
 
-        // ✅ PRIMA POSIZIONE IMMEDIATA
+
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             if (location != null && currentTripId != -1) {
                 val journeyLocation = JourneyLocation(

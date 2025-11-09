@@ -20,11 +20,9 @@ class TravelCompanionApp : Application() {
 
         // Schedula il worker periodico (che hai già fatto)
         setupPeriodicWork()
-
-        // --- RIGA DA AGGIUNGERE ---
         // Avvia il rilevamento dell'attività
         startActivityDetection()
-        // --- FINE RIGA ---
+
     }
 
     private fun setupPeriodicWork() {
@@ -41,11 +39,7 @@ class TravelCompanionApp : Application() {
         Log.d("TravelCompanionApp", "Worker periodico (1 giorno) schedulato.")
     }
 
-    // --- BLOCCO INTERO DA AGGIUNGERE ---
-    /**
-     * Avvia il client di ActivityRecognition per ascoltare
-     * le attività dell'utente in background.
-     */
+
     @SuppressLint("MissingPermission") // Il permesso viene chiesto nella MainActivity
     private fun startActivityDetection() {
         val context = this.applicationContext
@@ -61,8 +55,7 @@ class TravelCompanionApp : Application() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        // Intervallo di rilevamento: ogni 5 minuti (300_000 millisecondi)
-        // È un buon equilibrio tra reattività e batteria
+
         val detectionInterval: Long = 300_000
 
         ActivityRecognition.getClient(context)
@@ -74,5 +67,5 @@ class TravelCompanionApp : Application() {
                 Log.e("TravelCompanionApp", "Rilevamento attività fallito: $e")
             }
     }
-    // --- FINE BLOCCO DA AGGIUNGERE ---
+
 }
