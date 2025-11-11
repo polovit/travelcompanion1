@@ -37,7 +37,7 @@ class TripsViewModel(application: Application) : AndroidViewModel(application) {
         }.asLiveData() // Converti il risultato in LiveData
     }
 
-
+//funzioni
     fun setFilter(type: String?) {
         filterState.value = type
     }
